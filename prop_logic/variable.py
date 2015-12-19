@@ -1,6 +1,7 @@
 __author__ = 'danielpalmqvist'
-from expression import Expr
 import string
+
+from expression import Expr
 
 _i = 1
 def standardize_variables(variables):

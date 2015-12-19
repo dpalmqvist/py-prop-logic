@@ -1,24 +1,13 @@
 #prop_logic.py
 
-#Copyright (C) 2011 Ulf Daniel Palmqvist
-#This program is free software: you can redistribute it and/or modify
-#it under the terms of the GNU General Public License as published by
-#the Free Software Foundation, either version 3 of the License, or
-#(at your option) any later version.
-
-#This program is distributed in the hope that it will be useful,
-#but WITHOUT ANY WARRANTY; without even the implied warranty of
-#MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#GNU General Public License for more details.
-#
-#You should have received a copy of the GNU General Public License
-#along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
 import string
-from expression import Expr, make_expr
-from variable import subst, standardize_variables, unify
-special_operators = ["Not", "Eq"]
 
+from expression import make_expr
+from variable import subst, standardize_variables, unify
+
+__version__ = "0.1.0"
+
+special_operators = ["Not", "Eq"]
 
 def fol_bc_or(KB,goal,theta,level=0):
     if goal.op=="Not":
@@ -127,6 +116,3 @@ class FolKB:
     def fol_bc_ask(self, query):
         #return prove_any(self.KB, query,{})
         return fol_bc_or(self.KB,query,{})
-
-if __name__ == "__main__":
-    pass

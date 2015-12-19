@@ -1,8 +1,10 @@
 import unittest
-from prop_logic import FolKB
-from expression import make_expr, Expr
 
-class TestWumpus(unittest.TestCase):
+from prop_logic.expression import make_expr, Expr
+from prop_logic.prop_logic import FolKB
+
+
+class TestPropLogic(unittest.TestCase):
     def test_cats(self):
         print "==================================================================================="
         print "Cats"
