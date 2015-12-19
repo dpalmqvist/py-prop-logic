@@ -1,6 +1,6 @@
 from __future__ import print_function
 from setuptools import setup, find_packages
-from setuptools.command.test import test as TestCommand
+from setuptools.command.test import test
 import io
 import os
 import sys
@@ -32,7 +32,7 @@ setup(
     packages=['prop_logic'],
     include_package_data=True,
     platforms='any',
-    test_suite='prop_logic.test.test',
+    test_suite='prop_logic.test.unittests',
     classifiers = [
         'Programming Language :: Python',
         'Development Status :: 4 - Beta',
