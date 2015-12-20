@@ -1,13 +1,12 @@
 from __future__ import print_function
-from setuptools import setup, find_packages
-from setuptools.command.test import test
+from setuptools import setup
 import io
 import os
-import sys
 
 import prop_logic
 
 here = os.path.abspath(os.path.dirname(__file__))
+
 
 def read(*filenames, **kwargs):
     encoding = kwargs.get('encoding', 'utf-8')
@@ -33,14 +32,13 @@ setup(
     include_package_data=True,
     platforms='any',
     test_suite='prop_logic.test.unittests',
-    classifiers = [
-        'Programming Language :: Python',
-        'Development Status :: 4 - Beta',
-        'Natural Language :: English',
-        'Environment :: Logic programming',
-        'Intended Audience :: Developers',
-        'License :: OSI Approved :: GNU General Public License',
-        'Operating System :: OS Independent',
-        'Topic :: Software Development :: Libraries :: Python Modules',
-        ]
+    classifiers=['Programming Language :: Python',
+                 'Development Status :: 4 - Beta',
+                 'Natural Language :: English',
+                 'Environment :: Logic programming',
+                 'Intended Audience :: Developers',
+                 'License :: OSI Approved :: GNU General Public License',
+                 'Operating System :: OS Independent',
+                 'Topic :: Software Development :: Libraries :: Python Modules',
+                 ]
 )
