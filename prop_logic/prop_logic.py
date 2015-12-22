@@ -2,7 +2,6 @@ import string
 from expression import make_expr
 from variable import subst, standardize_variables, unify
 
-__version__ = "0.1.0"
 special_operators = ["Not", "Eq"]
 
 
