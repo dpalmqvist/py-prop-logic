@@ -1,0 +1,6 @@
+*.pyc
+build/*
+dist/*
+target/*
+prop_logic.egg-info/*
+.idea/*
