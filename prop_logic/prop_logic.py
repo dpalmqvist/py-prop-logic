@@ -13,7 +13,7 @@ def fol_bc_or(kb, goal, theta, level=0):
         if any([x is not None for x in fol_bc_or(kb, check_goal, {})]):
             yield None
         else:
-            yield dict(theta)
+            yield theta.copy()
     elif goal.op == "Eq":
         # Equality between pairs
         val0 = subst(goal.args[0], theta)
@@ -21,7 +21,7 @@ def fol_bc_or(kb, goal, theta, level=0):
         if val0 != val1:
             yield None
         else:
-            yield dict(theta)
+            yield theta.copy()
     else:
         rules = kb[goal.op]
         for rule in rules:
@@ -33,7 +33,7 @@ def fol_bc_or(kb, goal, theta, level=0):
                 lhs = []
             for thetap in fol_bc_and(kb, lhs, unify(rhs, goal, theta), level + 1):
                 if thetap is not None:
-                    yield dict(thetap)
+                    yield thetap.copy()
                 else:
                     yield None
     raise StopIteration()
@@ -43,13 +43,13 @@ def fol_bc_and(kb, goals, theta, level=0):
     if theta is None:
         yield None
     elif len(goals) == 0:
-        yield dict(theta)
+        yield theta.copy()
     else:
         (first, rest) = (goals[0], goals[1:])
         for thetap in fol_bc_or(kb, subst(first, theta), theta, level + 1):
             for thetapp in fol_bc_and(kb, rest, thetap, level + 1):
                 if thetapp:
-                    yield dict(thetapp)
+                    yield thetapp.copy()
                 else:
                     yield None
     raise StopIteration()
