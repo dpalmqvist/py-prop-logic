@@ -41,7 +41,8 @@ def fol_bc_or(knowledge_dict, goal, theta, level=0):
             else:
                 rhs = standardized_rule
                 lhs = []
-            for thetap in fol_bc_and(knowledge_dict, lhs, unify(rhs, goal, theta), level + 1):
+            for thetap in fol_bc_and(knowledge_dict, lhs,
+                                     unify(rhs, goal, theta.copy()), level + 1):
                 if thetap is not None:
                     yield thetap.copy()
                 else:
