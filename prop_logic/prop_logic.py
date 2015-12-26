@@ -10,7 +10,7 @@ def fol_bc_or(kb, goal, theta, level=0):
         # Negation as failure
         sub_goal = goal.args[0]
         check_goal = subst(sub_goal, theta)
-        if any([x is not None for x in fol_bc_or(kb, check_goal, {})]):
+        if any([x is not None for x in fol_bc_or(kb, check_goal, dict())]):
             yield None
         else:
             yield theta.copy()
@@ -36,8 +36,8 @@ def fol_bc_or(kb, goal, theta, level=0):
                     yield thetap.copy()
                 else:
                     yield None
-    raise StopIteration()
-                    
+    return
+
 
 def fol_bc_and(kb, goals, theta, level=0):
     if theta is None:
@@ -52,7 +52,7 @@ def fol_bc_and(kb, goals, theta, level=0):
                     yield thetapp.copy()
                 else:
                     yield None
-    raise StopIteration()
+    return
 
 
 class FolKB:
@@ -100,7 +100,6 @@ class FolKB:
                 yield True
             else:
                 yield False
-            raise StopIteration()
         else:
             for r in self.fol_bc_ask(query):
                 if r:
@@ -108,7 +107,7 @@ class FolKB:
                     for c in query_vars:
                         retval[c] = r[c]
                     yield retval
-            raise StopIteration()                    
+        return
 
     def fol_bc_ask(self, query):
-        return fol_bc_or(self.KB, query, {})
+        return fol_bc_or(self.KB, query, dict())
