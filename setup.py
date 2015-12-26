@@ -1,5 +1,5 @@
 from __future__ import print_function
-from setuptools import setup
+from setuptools import setup, find_packages
 import io
 import os
 
@@ -31,7 +31,7 @@ setup(
     packages=['prop_logic'],
     include_package_data=True,
     platforms='any',
-    test_suite='prop_logic.test.unittests',
+    test_suite='tests',
     classifiers=['Programming Language :: Python',
                  'Development Status :: 4 - Beta',
                  'Natural Language :: English',

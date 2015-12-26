@@ -1,20 +1,30 @@
+""" Provides the First order logic engine FolKB along with
+    the resolution methods fol_bc_or and fol_bc_and
+"""
 import string
-from expression import make_expr
-from variable import subst, standardize_variables, unify
+from .expression import make_expr
+from .variable import subst, standardize_variables, unify
 
-special_operators = ["Not", "Eq"]
+SPECIAL_OPERATORS = ["Not", "Eq"]
 
 
-def fol_bc_or(kb, goal, theta, level=0):
-    if goal.op == "Not":
+def fol_bc_or(knowledge_dict, goal, theta, level=0):
+    """ Resolves or-statements
+    :param knowledge_dict: dictionary of facts
+    :param goal: dictionary of question asked
+    :param theta: current resolved variables
+    :param level:
+    :return:
+    """
+    if goal.operator == "Not":
         # Negation as failure
         sub_goal = goal.args[0]
         check_goal = subst(sub_goal, theta)
-        if any([x is not None for x in fol_bc_or(kb, check_goal, dict())]):
+        if any([x is not None for x in fol_bc_or(knowledge_dict, check_goal, dict())]):
             yield None
         else:
             yield theta.copy()
-    elif goal.op == "Eq":
+    elif goal.operator == "Eq":
         # Equality between pairs
         val0 = subst(goal.args[0], theta)
         val1 = subst(goal.args[1], theta)
@@ -23,15 +33,15 @@ def fol_bc_or(kb, goal, theta, level=0):
         else:
             yield theta.copy()
     else:
-        rules = kb[goal.op]
+        rules = knowledge_dict[goal.operator]
         for rule in rules:
-            srule = standardize_variables(rule)
-            if srule.op == "<-":
-                (lhs, rhs) = (srule.args[1:], srule.args[0])
+            standardized_rule = standardize_variables(rule)
+            if standardized_rule.operator == "<-":
+                (lhs, rhs) = (standardized_rule.args[1:], standardized_rule.args[0])
             else:
-                rhs = srule
+                rhs = standardized_rule
                 lhs = []
-            for thetap in fol_bc_and(kb, lhs, unify(rhs, goal, theta), level + 1):
+            for thetap in fol_bc_and(knowledge_dict, lhs, unify(rhs, goal, theta), level + 1):
                 if thetap is not None:
                     yield thetap.copy()
                 else:
@@ -39,15 +49,22 @@ def fol_bc_or(kb, goal, theta, level=0):
     return
 
 
-def fol_bc_and(kb, goals, theta, level=0):
+def fol_bc_and(knowledge_dict, goals, theta, level=0):
+    """ Resolves and-statements
+    :param knowledge_dict: dictionary of facts
+    :param goal: dictionary of question asked
+    :param theta: current resolved variables
+    :param level:
+    :return:
+    """
     if theta is None:
         yield None
     elif len(goals) == 0:
         yield theta.copy()
     else:
         (first, rest) = (goals[0], goals[1:])
-        for thetap in fol_bc_or(kb, subst(first, theta), theta, level + 1):
-            for thetapp in fol_bc_and(kb, rest, thetap, level + 1):
+        for thetap in fol_bc_or(knowledge_dict, subst(first, theta), theta, level + 1):
+            for thetapp in fol_bc_and(knowledge_dict, rest, thetap, level + 1):
                 if thetapp:
                     yield thetapp.copy()
                 else:
@@ -55,59 +72,81 @@ def fol_bc_and(kb, goals, theta, level=0):
     return
 
 
-class FolKB:
+class FolKB(object):
+    """
+    First order logic knowledge base class
+    """
     def __init__(self):
-        self.KB = {}
-            
+        self.knowledge_base = {}
+
     def tell(self, goal):
+        """
+        Adds a new rule to the knowledge base
+        :param goal: rule to add
+        """
         if isinstance(goal, str):
             goal = make_expr(goal)
-        if goal.op in special_operators:
-            raise Exception("Predicate is reserved word '%s'" % goal.op)
-        if goal.op == "<-":
-            key = goal.args[0].op
+        if goal.operator in SPECIAL_OPERATORS:
+            raise Exception("Predicate is reserved word '%s'" % goal.operator)
+        if goal.operator == "<-":
+            key = goal.args[0].operator
         else:
-            key = goal.op
-        if key in self.KB:
-            self.KB[key].append(goal)
+            key = goal.operator
+        if key in self.knowledge_base:
+            self.knowledge_base[key].append(goal)
         else:
-            self.KB[key] = [goal]
+            self.knowledge_base[key] = [goal]
 
     def retract(self, goal):
+        """
+        Retracts a rule from the knowledge base
+        :param goal: rule to retract
+        :return:
+        """
         if isinstance(goal, str):
             goal = make_expr(goal)
-        if goal.op == "<-":
-            key = goal.args[0].op
+        if goal.operator == "<-":
+            key = goal.args[0].operator
         else:
-            key = goal.op
-        if key in self.KB:
-            if goal in self.KB[key]:
-                self.KB[key].remove(goal)
+            key = goal.operator
+        if key in self.knowledge_base:
+            if goal in self.knowledge_base[key]:
+                self.knowledge_base[key].remove(goal)
 
     def ask(self, query):
+        """
+        Ask a question of the knowledge base
+        :param query: is a goal to fulfill, can be string or Expr
+        :return: iterator with dicts containing possible answers
+        """
         if isinstance(query, str):
             query = make_expr(query)
         query_vars = []
         for i in range(len(query.args)):
-            x = query.args[i]
-            if x == "_":
+            argument = query.args[i]
+            if argument == "_":
                 query.args[i] = "silent_var_%d" % i
-            elif x[0] in string.lowercase:
-                query_vars.append(x)
+            elif argument[0] in string.lowercase:
+                query_vars.append(argument)
         if len(query_vars) == 0:
             # Return True or False only. No free variables to assign.
-            if any([x is not None for x in self.fol_bc_ask(query)]):
+            if any([argument is not None for argument in self.fol_bc_ask(query)]):
                 yield True
             else:
                 yield False
         else:
-            for r in self.fol_bc_ask(query):
-                if r:
+            for result in self.fol_bc_ask(query):
+                if result:
                     retval = dict()
-                    for c in query_vars:
-                        retval[c] = r[c]
+                    for res in query_vars:
+                        retval[res] = result[res]
                     yield retval
         return
 
     def fol_bc_ask(self, query):
-        return fol_bc_or(self.KB, query, dict())
+        """
+        Calls the resolution engine
+        :param query:
+        :return:
+        """
+        return fol_bc_or(self.knowledge_base, query, dict())

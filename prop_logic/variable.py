@@ -1,94 +1,136 @@
+""" variable.py
+    Representation of variables for py-prop-logic
+    Standardization and unification
+"""
+
 import string
-from expression import Expr
+from .expression import Expr
 
 
-_i = 1
+MAX_VARS = 1
 
 
 def standardize_variables(variables):
+    """
+    Interface for standardize
+    :param variables: old dict of variables
+    :return: new dict of variables
+    """
     return standardize(variables, {})
 
 
 def standardize(variables, new_vars):
-    global _i
+    """
+    Creates unique standardized variable names for internal use
+    :param variables: old dict of variables
+    :param new_vars: new dict of standardized variable names
+    :return:
+    """
+    global MAX_VARS
     if isinstance(variables, list):
         output = []
-        for v in variables:
-            output.append(standardize(v, new_vars))
-            _i += 1
+        for var in variables:
+            output.append(standardize(var, new_vars))
+            MAX_VARS += 1
         return output
     elif isinstance(variables, Expr):
-        (new_exp, _i) = variables.standardize_variables(_i, new_vars)
+        (new_exp, MAX_VARS) = variables.standardize_variables(MAX_VARS, new_vars)
         return new_exp
     elif isinstance(variables, str) and (variables[0] in string.lowercase):
         if variables in new_vars:
             return new_vars[variables]
         else:
-            new_var = "x_%d" % _i
-            _i += 1
+            new_var = "x_%d" % MAX_VARS
+            MAX_VARS += 1
             new_vars[variables] = new_var
             return new_var
     else:
         return variables
 
 
-def subst(x, theta):
-    if isinstance(x, list):
+def subst(variables, theta):
+    """
+    Substitutes in the variable assignments for the variables
+    :param variables:
+    :param theta:
+    :return:
+    """
+    if isinstance(variables, list):
         output = []
-        for xx in x:
-            output.append(subst(xx, theta))
+        for var in variables:
+            output.append(subst(var, theta))
         return output
-    elif isinstance(x, Expr):
-        return Expr(x.op, subst(x.args, theta))
-    elif isinstance(x, str) and (x[0] in string.uppercase):
-        return x
-    elif isinstance(x, str) and (x[0] in string.lowercase):
-        if x in theta:
-            return subst(theta[x], theta)
+    elif isinstance(variables, Expr):
+        return Expr(variables.operator, subst(variables.args, theta))
+    elif isinstance(variables, str) and (variables[0] in string.uppercase):
+        return variables
+    elif isinstance(variables, str) and (variables[0] in string.lowercase):
+        if variables in theta:
+            return subst(theta[variables], theta)
         else:
-            return x
+            return variables
     else:
         return False
 
 
-def unify(x, y, exttheta):
+def unify(var1, var2, exttheta):
+    """
+    Calls unify var based on types
+    :param var1: variable
+    :param var2: variable
+    :param exttheta: dictionary of variables
+    :return:
+    """
     if exttheta is None:
         return None
     theta = dict(exttheta)
-    if x == y:
+    if var1 == var2:
         return theta
-    elif isinstance(x, str) and (x[0] in string.lowercase):
-        return unify_var(x, y, theta)
-    elif isinstance(y, str) and (y[0] in string.lowercase):
-        return unify_var(y, x, theta)
-    elif isinstance(x, Expr) and isinstance(y, Expr):
-        return unify(x.args, y.args, unify(x.op, y.op, theta))
-    elif isinstance(x, list) and isinstance(y, list):
-        return unify(x[1:], y[1:], unify(x[0], y[0], theta))
+    elif isinstance(var1, str) and (var1[0] in string.lowercase):
+        return unify_var(var1, var2, theta)
+    elif isinstance(var2, str) and (var2[0] in string.lowercase):
+        return unify_var(var2, var1, theta)
+    elif isinstance(var1, Expr) and isinstance(var2, Expr):
+        return unify(var1.args, var2.args, unify(var1.operator, var2.operator, theta))
+    elif isinstance(var1, list) and isinstance(var2, list):
+        return unify(var1[1:], var2[1:], unify(var1[0], var2[0], theta))
     else:
         return None
 
 
-def unify_var(var, x, theta):
-    if var in theta:
-        return unify(theta[var], x, theta)
-    elif x in theta:
-        return unify(var, theta[x], theta)
-    elif occurs(var, x):
+def unify_var(var1, var2, theta):
+    """
+    Unifies var and x to the same entity in theta
+    :param var1: variable
+    :param var2: variable
+    :param theta: dict of variables
+    :return:
+    """
+    if var1 in theta:
+        return unify(theta[var1], var2, theta)
+    elif var2 in theta:
+        return unify(var1, theta[var2], theta)
+    elif occurs(var1, var2):
         return None
     else:
-        theta[var] = x
+        theta[var1] = var2
         return theta
 
 
-def occurs(var, x):
-    if isinstance(x, Expr):
-        if occurs(var, x.args):
+def occurs(var1, exp):
+    """
+    Checks if the variable occurs in the expression
+    :param var1: variable to check
+    :param exp: expression, list or string to check
+    :return:
+    """
+    if isinstance(exp, Expr):
+        if occurs(var1, exp.args):
             return True
-    if isinstance(x, list):
-        if var in x:
+    if isinstance(exp, list):
+        if var1 in exp:
             return True
     else:
-        if var == x:
+        if var1 == exp:
             return True
     return False

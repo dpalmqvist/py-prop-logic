@@ -1,64 +1,78 @@
+""" expression
+    Representation of logical expressions for py-prop-logic
+"""
+
 import string
 
 
 def make_expr(exp):
-    # Makes the necessary Expr's from an input string. Minimal syntax check.
+    """
+    Creates Expr objects from strings with minimal syntax checking
+    :param exp: String
+    :return: Expr that represents the expression
+    """
     exp = exp.strip()
     if "->" in exp:
         exp = exp.split("->")
         implication = exp[1]
         args = [make_expr(implication.strip())]
         clauses = exp[0].split('&')
-        for c in clauses:
-            args.append(make_expr(c.strip()))
+        for clause in clauses:
+            args.append(make_expr(clause.strip()))
         return Expr("<-", args)
     elif exp[0:3] == "Not":
         sub_exp = exp[4:(exp.rfind(")", 4))]
         sub_expr = make_expr(sub_exp)
-        op = "Not"
+        operator = "Not"
         args = [sub_expr]
-        return Expr(op, args)
+        return Expr(operator, args)
     else:
         exp = exp.split("(")
-        op = exp[0]
+        operator = exp[0]
         exp[1] = exp[1].rstrip(")")
         args = exp[1].split(',')
-        return Expr(op, args)
+        return Expr(operator, args)
 
 
-class Expr:
-    def __init__(self, op, args):
-        self.op = op
+class Expr(object):
+    """ represents logical expressions """
+    def __init__(self, operator, args):
+        self.operator = operator
         self.args = args
 
     def __repr__(self):
-        if self.op == "<-":
+        if self.operator == "<-":
             args = [str(a) for a in self.args[1:]]
-            op = str(self.args[0])
-            return " & ".join(args) + " -> " + op
+            operator = str(self.args[0])
+            return " & ".join(args) + " -> " + operator
         else:
             args = [str(a) for a in self.args]
-            op = self.op
-            return "#:"+op+"("+",".join(args)+")"
+            operator = self.operator
+            return "#:"+operator+"("+",".join(args)+")"
 
     def standardize_variables(self, i, new_vars):
+        """
+        :param i:
+        :param new_vars:
+        :return:
+        """
         output = []
-        for v in self.args:
-            if isinstance(v, Expr):
-                (new_v, i) = v.standardize_variables(i, new_vars)
-                output.append(new_v)
-            elif v not in new_vars and v[0] in string.lowercase:
-                new_vars[v] = "x_%d" % i
-                output.append(new_vars[v])
+        for variable in self.args:
+            if isinstance(variable, Expr):
+                (new_variable, i) = variable.standardize_variables(i, new_vars)
+                output.append(new_variable)
+            elif variable not in new_vars and variable[0] in string.lowercase:
+                new_vars[variable] = "x_%d" % i
+                output.append(new_vars[variable])
                 i += 1
-            elif v[0] in string.lowercase:
-                output.append(new_vars[v])
+            elif variable[0] in string.lowercase:
+                output.append(new_vars[variable])
             else:
-                output.append(v)
-        return Expr(self.op, output), i
+                output.append(variable)
+        return Expr(self.operator, output), i
 
     def __eq__(self, other):
-        equal = (other.op == self.op)
+        equal = (other.operator == self.operator)
         equal &= len(self.args) == len(other.args)
         if not equal:  # Safequarding the zip operation below
             return False

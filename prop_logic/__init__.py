@@ -1,5 +1,5 @@
-from expression import *
-from variable import *
-from prop_logic import *
+""" prop_logic
+    Propositional logic engine implemented in Python
+"""
 
 __version__ = "0.1.0"
