@@ -73,7 +73,7 @@ def subst(variables, theta):
         return False
 
 
-def unify(var1, var2, exttheta):
+def unify(var1, var2, theta):
     """
     Calls unify var based on types
     :param var1: variable
@@ -81,9 +81,8 @@ def unify(var1, var2, exttheta):
     :param exttheta: dictionary of variables
     :return:
     """
-    if exttheta is None:
+    if theta is None:
         return None
-    theta = dict(exttheta)
     if var1 == var2:
         return theta
     elif isinstance(var1, str) and (var1[0] in string.lowercase):
@@ -91,9 +90,9 @@ def unify(var1, var2, exttheta):
     elif isinstance(var2, str) and (var2[0] in string.lowercase):
         return unify_var(var2, var1, theta)
     elif isinstance(var1, Expr) and isinstance(var2, Expr):
-        return unify(var1.args, var2.args, unify(var1.operator, var2.operator, theta))
+        return unify(var1.args, var2.args, unify(var1.operator, var2.operator, theta.copy()))
     elif isinstance(var1, list) and isinstance(var2, list):
-        return unify(var1[1:], var2[1:], unify(var1[0], var2[0], theta))
+        return unify(var1[1:], var2[1:], unify(var1[0], var2[0], theta.copy()))
     else:
         return None
 
@@ -107,9 +106,9 @@ def unify_var(var1, var2, theta):
     :return:
     """
     if var1 in theta:
-        return unify(theta[var1], var2, theta)
+        return unify(theta[var1], var2, theta.copy())
     elif var2 in theta:
-        return unify(var1, theta[var2], theta)
+        return unify(var1, theta[var2], theta.copy())
     elif occurs(var1, var2):
         return None
     else:
@@ -124,13 +123,8 @@ def occurs(var1, exp):
     :param exp: expression, list or string to check
     :return:
     """
-    if isinstance(exp, Expr):
-        if occurs(var1, exp.args):
-            return True
-    if isinstance(exp, list):
-        if var1 in exp:
-            return True
-    else:
-        if var1 == exp:
-            return True
+    if (isinstance(exp, Expr) and occurs(var1, exp.args)) or \
+        (isinstance(exp, list) and var1 in exp) or \
+            (var1 == exp):
+        return True
     return False
